@@ -1,0 +1,19 @@
+{
+  "name": "pingmonitor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "pingMonitor.js",
+  "scripts": {
+    "start": ".\\pingMonitor.js"
+  },
+  "bin": ".\\pingMonitor.js",
+  "pkg": {
+    "assets": ["index.html"]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ping": "^0.4.2"
+  }
+}
