@@ -8,7 +8,8 @@
   },
   "bin": ".\\pingMonitor.js",
   "pkg": {
-    "assets": ["index.html"]
+    "assets": ["index.html"],
+    "targets": ["node16-win-x64"]
   },
   "keywords": [],
   "author": "",
