@@ -9,11 +9,13 @@ const http = require("http")
 
 
 const args = process.argv.slice(2);
+let INTERVAL_ID = ''
 
 const file = args[1] || format({
     dir: 'C:\\',
     base: 'logPing.json'
 })
+
 const html = args[1] || resolve(__dirname, 'index.html')
 
 const getDate = (date) => {
@@ -53,6 +55,16 @@ async function logger(file, log) {
     await appendFile(file, `${logInJson}\n`, 'utf-8')
 }
 
+const startInterval = async (ip) => {
+    INTERVAL_ID = setInterval(async () => {
+        const pingLog = await pingMonitor(ip)
+        await logger(file, pingLog)
+    }, 6000)
+}
+function stopInterval() {
+    clearInterval(INTERVAL_ID);
+}
+
 async function start(ip) {
     try {
         await writeFile(file, '', 'utf-8')
@@ -67,10 +79,7 @@ async function start(ip) {
             startDate: getDate(new Date()),
         }
         await appendFile(file, `${JSON.stringify(header)}\n`, 'utf-8')
-        setInterval(async () => {
-            const pingLog = await pingMonitor(ip)
-            await logger(file, pingLog)
-        }, 6000)
+        startInterval(ip)
     } catch (error) {
         const errorLog = {
             error: error.message,
@@ -95,10 +104,17 @@ process.on('SIGINT', async () => {
     process.exit(0);
 });
 
-const webLog = () => {
+const webLog = async () => {
     const port = process.env.PORT || 3000
+
     const requestListener = async (req, res) => {
         const { url } = req
+        const buffers = []
+        for await (const chunk of req) {
+            buffers.push(chunk)
+        }
+        const body = Buffer.concat(buffers).toString()
+
 
         const logJson = async (req, res) => {
             const lineReader = readline.createInterface({
@@ -126,17 +142,34 @@ const webLog = () => {
         const form = async (req, res) => {
             const html = resolve(__dirname, 'form.html')
             const file = await readFile(html, { encoding: 'utf-8' })
-            const interface = networkInterfaces().Ethernet.find(i => i.family =='IPv4')
-            const rendered =  file.toString().replace('#IP#', `${interface.address}`)
+            const interface = networkInterfaces().Ethernet.find(i => i.family == 'IPv4')
+            const rendered = file.toString().replace('#IP#', `${interface.address}`)
             res.statusCode = 200
             res.setHeader("Content-Type", "text/html")
             res.end(rendered)
         }
 
-        const notFound = async (req, res) => {
-            res.statusCode = 400
-            res.setHeader("Content-Type", "application/json")
-            res.end('<h1 style="text-align=center">404<br />NOT FOUND</h1>');
+        const ping = async (req, res) => {
+            const items = body.toString()
+                .split('&')
+                .reduce((acc, item) => {
+                    const [key, value] = item.split('=')
+                    return { ...acc, [key]: value }
+                }, {})
+            const { ip01, ip02, ip03, ip04 } = items
+
+            const ip = `${ip01}.${ip02}.${ip03}.${ip04}`
+            await start(ip)
+            res.writeHead(301, {
+                Location: `/index`
+            }).end()
+        }
+
+        const stop = (req, res) => {
+            stopInterval()
+            res.writeHead(301, {
+                Location: `/index`
+            }).end()
         }
 
         switch (url) {
@@ -149,7 +182,12 @@ const webLog = () => {
             case '/':
                 await form(req, res)
                 break;
-
+            case '/ping':
+                await ping(req, res)
+                break;
+            case '/stop':
+                stop(req, res)
+                break;
             default: form(req, res)
                 break;
         }
@@ -162,5 +200,5 @@ const webLog = () => {
     })
 }
 
-start(args[0], args[1])
-    .then(() => webLog())
+webLog()
+    .catch(e => console.log(e.message))
