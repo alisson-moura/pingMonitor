@@ -10,10 +10,29 @@ const http = require("http")
 const args = process.argv.slice(2);
 
 const file = args[1] || format({
-    dir: 'C:\\Trabalho',
+    dir: 'C:\\',
     base: 'logPing.json'
-  })
+})
 const html = args[1] || resolve(__dirname, 'index.html')
+
+const getDate = (date) => {
+    const TZ_BR = -3
+    function addRightZero(number) {
+        if (number < 10) {
+            number = `0${number}`
+            return number
+        }
+        return number
+    }
+    const day = addRightZero(date.getDate())
+    const month = addRightZero(date.getMonth() + 1)
+    const year = date.getFullYear()
+    const hours = addRightZero(date.getHours())
+    const minutes = addRightZero(date.getMinutes())
+    const seconds = addRightZero(date.getSeconds())
+
+    return `${day}/${month}/${year} - ${hours}:${minutes}:${seconds}h`
+}
 
 async function pingMonitor(ip) {
     const result = await ping.promise.probe(ip);
@@ -21,7 +40,7 @@ async function pingMonitor(ip) {
 }
 
 async function logger(file, log) {
-    const date = new Date()
+    const date = getDate(new Date())
     const text = {
         date,
         host: log.host,
@@ -37,14 +56,14 @@ async function start(ip) {
     try {
         await writeFile(file, '', 'utf-8')
     }
-    catch(err) {}
+    catch (err) { }
     try {
         if (!ip) throw new Error('Invalid IP')
 
         const header = {
             title: 'Log de comunicação',
             host: ip,
-            startDate: new Date(),
+            startDate: getDate(new Date()),
         }
         await appendFile(file, `${JSON.stringify(header)}\n`, 'utf-8')
         setInterval(async () => {
@@ -65,7 +84,7 @@ async function start(ip) {
 
 function logExit() {
     return '"footer":' + JSON.stringify({
-        endDate: new Date(),
+        endDate: getDate(new Date()),
     })
 }
 
@@ -90,7 +109,7 @@ const webLog = () => {
             for await (const line of lineReader) {
                 dataJson.push(JSON.parse(line))
             }
-        
+
             res.statusCode = 200
             res.setHeader("Content-Type", "application/json")
             res.end(JSON.stringify(dataJson));

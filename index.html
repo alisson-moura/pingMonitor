@@ -66,23 +66,16 @@
             const response = await fetch(`${baseUrl}/logs`)
             const logs = await response.json()
             const header = logs.shift()
-
-            const logsFormatted = logs.map(log => {
-                let [date, time] = log.date.split('T')
-                time = time.slice(0, 8)
-                log.time = `${date} - ${time}h`
-                return log
-            })
             return { logs, header }
         }
         const insertLogIntoPage = (logs) => {
             const $tbody = document.querySelector('tbody')
             $tbody.innerHTML = logs.reduce((tableRows, log) => {
                 return tableRows + `<tr ${!log.alive && 'class="table-danger"'}">
-                <td>${log.time}</td>
+                <td>${log.date}</td>
                 <td>${log.host}</td>
                 <td>${log.alive}</td>
-                <td>${log.avg_time}</td>
+                <td>${log.avg_time} ms</td>
                 <td>${log.packageLoss}</td>
                 </tr>`
             }, '')
@@ -92,13 +85,10 @@
             const $header = document.getElementById('title')
             const $host = document.getElementById('host')
             const $start = document.getElementById('start')
-            let [date, time] = header.startDate.split('T')
-            time = time.slice(0, 8)
-            header.time = `${date} - ${time}h`
-
+    
             $header.innerHTML = `${header.title}`
             $host.innerHTML = `Host: ${header.host}`
-            $start.innerHTML = `Iniciado em: ${header.time}`
+            $start.innerHTML = `Iniciado em: ${header.startDate}`
         }
 
         fetchLogs()
