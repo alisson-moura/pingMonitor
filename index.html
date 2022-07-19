@@ -12,6 +12,9 @@
 
 <body>
     <style>
+        body {
+            background: #eee;
+        }
         .container-log {
             max-width: 80%;
             margin: 1rem auto;
@@ -19,8 +22,11 @@
 
         .my-custom-scrollbar {
             position: relative;
-            height: 80vh;
+            height: 750px;
             overflow: auto;
+            background: #fff;
+            border-radius: 8px;
+            padding: 0 12px 12px 12px;
         }
 
         .table-wrapper-scroll-y {
@@ -30,7 +36,9 @@
     <div class="container-log">
         <h1 id="title"></h1>
         <h2 id="host"></h2>
-        <h2 id="start" class="mb-4"></h2>
+        <div class=" d-flex-column"> <h2 id="start" class="mb-4"></h2>
+            <a class="btn btn-sm btn-danger mb-4" href="/stop">Stop</a></div>
+       
         <div class="table-wrapper-scroll-y my-custom-scrollbar">
             <table class="table table-hover table-sm">
                 <thead>
