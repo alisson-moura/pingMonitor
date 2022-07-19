@@ -1,4 +1,5 @@
-const { appendFile, readFile, writeFile, stat } = require('fs/promises')
+const { appendFile, readFile, writeFile } = require('fs/promises')
+const { networkInterfaces } = require('os')
 const { createReadStream } = require("fs")
 const readline = require('readline')
 const { exit } = require('process')
@@ -122,6 +123,16 @@ const webLog = () => {
             res.end(file);
         }
 
+        const form = async (req, res) => {
+            const html = resolve(__dirname, 'form.html')
+            const file = await readFile(html, { encoding: 'utf-8' })
+            const interface = networkInterfaces().Ethernet.find(i => i.family =='IPv4')
+            const rendered =  file.toString().replace('#IP#', `${interface.address}`)
+            res.statusCode = 200
+            res.setHeader("Content-Type", "text/html")
+            res.end(rendered)
+        }
+
         const notFound = async (req, res) => {
             res.statusCode = 400
             res.setHeader("Content-Type", "application/json")
@@ -129,14 +140,17 @@ const webLog = () => {
         }
 
         switch (url) {
-            case '/':
+            case '/index':
                 await indexHtml(req, res)
                 break;
             case '/logs':
                 await logJson(req, res)
                 break;
+            case '/':
+                await form(req, res)
+                break;
 
-            default: notFound(req, res)
+            default: form(req, res)
                 break;
         }
     }
